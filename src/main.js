@@ -19,7 +19,7 @@ const { start } = require('repl');
  * DEFINE / ENV
  */
 const MAX_LIMIT = 50;
-const LOOP_COUNT_BATTLELOG = 5000;
+const LOOP_COUNT_BATTLELOG = 1999;
 
 const battleIds = new Set();
 
@@ -65,7 +65,7 @@ async function main() {
                 const [existingData] = await connection.execute(checkQuery, [battle.id]);
 
                 if (existingData.length > 0) {
-                    print_log('이미 해당 데이터가 존재합니다.');
+                    console.log('이미 해당 데이터가 존재합니다.');
                 } else {
                     // 2v2, 5v5, 10v10
                     if ((totalPlayers === 4 && totalKills >= 2) ||
