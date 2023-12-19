@@ -1,7 +1,7 @@
 // Control console.log
 
 const print_log = (msg) => {
-    console.log(msg);
+    //console.log(msg);
 }
 
 
