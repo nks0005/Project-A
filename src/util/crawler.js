@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 const fetchDataFromUrl = async (url) => {
     try {
         const response = await axios.get(url);

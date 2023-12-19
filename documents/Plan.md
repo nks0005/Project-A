@@ -7,7 +7,7 @@
 3. Crawler Event Log
 4. Loop
     1. Check Group Member Count: [2, 5, 10]
-    2. Check IP Range: [1100 ~ 1450]
+    2. Check IP Range: [1000 ~ 1450]
     
     + Extra Build
     3. If Group Member Count != 2 
@@ -39,7 +39,7 @@ created_at
 battle_id
 totalFame
 totalKills
-players
+countPlayers
 
 type : 2v2, 5v5, 10v10
 
