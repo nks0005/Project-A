@@ -10,6 +10,7 @@ CREATE TABLE battles (
     victory_team VARCHAR(512),
     defeat_team VARCHAR(512),
     type INT,
+    battle_time TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

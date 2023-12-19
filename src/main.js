@@ -9,6 +9,7 @@ const { print_log } = require('./util/print');
 
 const mysql = require('mysql2/promise');
 const dbConfig = require('./config/db_config.js');
+const { start } = require('repl');
 
 
 
@@ -51,47 +52,12 @@ async function main() {
         let check_battlelog = 0; // 22, 55, 1010
         let check_totalKills = 0;
         let check_players_count = 0;
-
-
-        // await data_recent_battlelog.forEach(async  battle => {
-        //     const totalKills = battle.totalKills;
-        //     const totalPlayers = Object.keys(battle.players).length;
-
-        //     // ===========================
-        //     // TODO: Check BattleID in DB
-        //     // if( has(battle.id) in DB ) continue;
-        //     const connection = await mysql.createConnection(dbConfig);
-        //     const checkQuery = 'SELECT * FROM battles WHERE battle_id = ?';
-        //     const [existingData] = await connection.execute(checkQuery, [id]);
-
-        //     if (existingData.length > 0) {
-        //         console.log('이미 해당 데이터가 존재합니다.');
-        //     } else {
-        //         // 이미 존재하지 않는 경우에 INSERT 수행
-        //         // ...
-        //     }
-
-        //     // ===========================
-
-
-        //     // 2v2, 5v5, 10v10
-        //     if ((totalPlayers === 4 && totalKills >= 2) ||
-        //         (totalPlayers === 10 && totalKills >= 5) ||
-        //         (totalPlayers === 20 && totalKills >= 10)) {
-        //         check_totalKills = totalKills;
-        //         check_players_count = totalPlayers;
-        //         check_battlelog = (check_players_count / 2) * 11;
-
-        //         // add data in Set
-        //         print_log(`Add Battle ID : ${battle.id}`);
-        //         battleIds.add(battle.id);
-        //     }
-        // });
-
+     
 
         for (const battle of data_recent_battlelog) {
             const totalKills = battle.totalKills;
             const totalPlayers = Object.keys(battle.players).length;
+            
 
             try {
                 const connection = await mysql.createConnection(dbConfig);
@@ -142,6 +108,9 @@ async function main() {
             const totalKills = data_battlelog_id.totalKills;
             const totalFame = data_battlelog_id.totalFame;
             const countPlayers = Object.keys(players).length;
+            const timeStampString = data_battlelog_id.startTime;
+            const startTime = new Date(timeStampString).toISOString().slice(0, 19).replace('T', ' ');
+            console.log(`startTime : ${startTime}`);
             const name_players = new Set();
 
             for (const uid in players) {
@@ -302,7 +271,7 @@ async function main() {
                 const connection = await mysql.createConnection(dbConfig);
 
                 // INSERT 쿼리 생성
-                const insertQuery = `INSERT INTO battles (battle_id, totalFame, totalKills, countPlayers, victory_team, defeat_team, type) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                const insertQuery = `INSERT INTO battles (battle_id, totalFame, totalKills, countPlayers, victory_team, defeat_team, battle_time, type ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
                 // 데이터
                 const data = [
@@ -312,7 +281,9 @@ async function main() {
                     countPlayers, // countPlayers
                     vteam, // victory_team
                     dteam, // defeat_team
+                    startTime,
                     type // type
+                    
                 ];
 
                 // INSERT 실행
