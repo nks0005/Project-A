@@ -19,7 +19,7 @@ const { start } = require('repl');
  * DEFINE / ENV
  */
 const MAX_LIMIT = 50;
-const LOOP_COUNT_BATTLELOG = 10;
+const LOOP_COUNT_BATTLELOG = 5000;
 
 const battleIds = new Set();
 
@@ -52,12 +52,12 @@ async function main() {
         let check_battlelog = 0; // 22, 55, 1010
         let check_totalKills = 0;
         let check_players_count = 0;
-     
+
 
         for (const battle of data_recent_battlelog) {
             const totalKills = battle.totalKills;
             const totalPlayers = Object.keys(battle.players).length;
-            
+
 
             try {
                 const connection = await mysql.createConnection(dbConfig);
@@ -65,7 +65,7 @@ async function main() {
                 const [existingData] = await connection.execute(checkQuery, [battle.id]);
 
                 if (existingData.length > 0) {
-                    console.log('이미 해당 데이터가 존재합니다.');
+                    print_log('이미 해당 데이터가 존재합니다.');
                 } else {
                     // 2v2, 5v5, 10v10
                     if ((totalPlayers === 4 && totalKills >= 2) ||
@@ -110,7 +110,7 @@ async function main() {
             const countPlayers = Object.keys(players).length;
             const timeStampString = data_battlelog_id.startTime;
             const startTime = new Date(timeStampString).toISOString().slice(0, 19).replace('T', ' ');
-            console.log(`startTime : ${startTime}`);
+            //print_log(`startTime : ${startTime}`);
             const name_players = new Set();
 
             for (const uid in players) {
@@ -244,25 +244,103 @@ async function main() {
                 defeat_team = A_team;
             }
 
+            // victory_team, defeat_team의 이름 뒤에 무기도 넣어야함.
+            data_eventlog.forEach(battle => {
+                let name_weapon;
+                let name_user;
 
+
+                // Killer
+                let current = battle.Killer;
+                if (current.Equipment.MainHand) {
+                    if (current.Equipment.MainHand.Type) {
+                        name_user = current.Name;
+                        name_weapon = current.Equipment.MainHand.Type;
+                        if (victory_team.has(name_user)) {
+                            print_log(`victory_team : ${name_user} | ${name_weapon}`);
+
+                            victory_team.delete(name_user);
+                            victory_team.add(`${name_user}.${name_weapon}`);
+                        }
+                        else if (defeat_team.has(name_user)) {
+                            print_log(`defeat_team : ${name_user} | ${name_weapon}`);
+
+                            defeat_team.delete(name_user);
+                            defeat_team.add(`${name_user}.${name_weapon}`);
+                        }
+                    }
+                }
+
+                // Victim
+                current = battle.Victim;
+                if (current.Equipment.MainHand) {
+                    if (current.Equipment.MainHand.Type) {
+                        name_user = current.Name;
+                        name_weapon = current.Equipment.MainHand.Type;
+                        if (victory_team.has(name_user)) {
+                            print_log(`victory_team : ${name_user} | ${name_weapon}`);
+
+                            victory_team.delete(name_user);
+                            victory_team.add(`${name_user}.${name_weapon}`);
+                        }
+                        else if (defeat_team.has(name_user)) {
+                            print_log(`defeat_team : ${name_user} | ${name_weapon}`);
+
+                            defeat_team.delete(name_user);
+                            defeat_team.add(`${name_user}.${name_weapon}`);
+                        }
+                    }
+                }
+
+                // Participants
+
+
+                // GroupMembers
+                print_log(`groupmembers length : ${battle.GroupMembers.length}`);
+                for (let g = 0; g < battle.GroupMembers.length; g++) {
+                    
+                    current = battle.GroupMembers[g];
+                    
+                    if (current.Equipment.MainHand) {
+                        if (current.Equipment.MainHand.Type) {
+                            name_user = current.Name;
+                            name_weapon = current.Equipment.MainHand.Type;
+
+                            print_log(`groupmember : ${name_user} | ${name_weapon}`);
+                            if (victory_team.has(name_user)) {
+                                print_log(`victory_team : ${name_user} | ${name_weapon}`);
+
+                                victory_team.delete(name_user);
+                                victory_team.add(`${name_user}.${name_weapon}`);
+                            }
+                            else if (defeat_team.has(name_user)) {
+                                print_log(`defeat_team : ${name_user} | ${name_weapon}`);
+
+                                defeat_team.delete(name_user);
+                                defeat_team.add(`${name_user}.${name_weapon}`);
+                            }
+                        }
+                    }
+                }
+            });
 
             // SAVE DB
             const type = countPlayers === 20 ? 1010 : countPlayers === 10 ? 55 : 22;
-            console.log(`====== TEST ======`);
-            console.log(`${id}\t${totalFame}\t${totalKills}\t${countPlayers}\t${type}`);
-            console.log(`== VICTORY TEAM ==`);
+            print_log(`====== TEST ======`);
+            print_log(`${id}\t${totalFame}\t${totalKills}\t${countPlayers}\t${type}`);
+            print_log(`== VICTORY TEAM ==`);
 
             const vteam = Array.from(victory_team).join(', ');
-            console.log(vteam);
+            print_log(vteam);
             // victory_team.forEach((name) => {
-            //     console.log(`${name}`);
+            //     print_log(`${name}`);
             // });
 
-            console.log(`== DEFEAT TEAM ==`);
+            print_log(`== DEFEAT TEAM ==`);
             const dteam = Array.from(defeat_team).join(', ');
-            console.log(dteam);
+            print_log(dteam);
             // defeat_team.forEach((name) => {
-            //     console.log(`${name}`);
+            //     print_log(`${name}`);
             // });
 
 
@@ -283,12 +361,12 @@ async function main() {
                     dteam, // defeat_team
                     startTime,
                     type // type
-                    
+
                 ];
 
                 // INSERT 실행
                 const [results] = await connection.execute(insertQuery, data);
-                console.log('데이터 삽입 완료:', results);
+                console.log(`데이터 삽입 완료:, ${results.insertId} battleId : ${id}`);
 
                 // 연결 종료
                 await connection.end();
