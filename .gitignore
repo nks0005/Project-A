@@ -1,2 +1,4 @@
 
 node_modules/*
+src/config/db_config.js
+index2.js

@@ -7,6 +7,13 @@
 const { fetchDataFromUrl } = require('./util/crawler');
 const { print_log } = require('./util/print');
 
+const mysql = require('mysql2/promise');
+const dbConfig = require('./config/db_config.js');
+
+
+
+
+
 /**
  * DEFINE / ENV
  */
@@ -23,6 +30,7 @@ async function main() {
 
     // lc = loop_count
     for (let lc = 0; lc < LOOP_COUNT_BATTLELOG; lc++) {
+        battleIds.clear();
         const offset = lc === 0 ? 0 : lc * 50;
 
         const url_battlelog = `https://gameinfo-sgp.albiononline.com/api/gameinfo/battles?offset=${offset}&limit=${MAX_LIMIT}&sort=recent`;
@@ -45,29 +53,73 @@ async function main() {
         let check_players_count = 0;
 
 
-        data_recent_battlelog.forEach(battle => {
+        // await data_recent_battlelog.forEach(async  battle => {
+        //     const totalKills = battle.totalKills;
+        //     const totalPlayers = Object.keys(battle.players).length;
+
+        //     // ===========================
+        //     // TODO: Check BattleID in DB
+        //     // if( has(battle.id) in DB ) continue;
+        //     const connection = await mysql.createConnection(dbConfig);
+        //     const checkQuery = 'SELECT * FROM battles WHERE battle_id = ?';
+        //     const [existingData] = await connection.execute(checkQuery, [id]);
+
+        //     if (existingData.length > 0) {
+        //         console.log('이미 해당 데이터가 존재합니다.');
+        //     } else {
+        //         // 이미 존재하지 않는 경우에 INSERT 수행
+        //         // ...
+        //     }
+
+        //     // ===========================
+
+
+        //     // 2v2, 5v5, 10v10
+        //     if ((totalPlayers === 4 && totalKills >= 2) ||
+        //         (totalPlayers === 10 && totalKills >= 5) ||
+        //         (totalPlayers === 20 && totalKills >= 10)) {
+        //         check_totalKills = totalKills;
+        //         check_players_count = totalPlayers;
+        //         check_battlelog = (check_players_count / 2) * 11;
+
+        //         // add data in Set
+        //         print_log(`Add Battle ID : ${battle.id}`);
+        //         battleIds.add(battle.id);
+        //     }
+        // });
+
+
+        for (const battle of data_recent_battlelog) {
             const totalKills = battle.totalKills;
             const totalPlayers = Object.keys(battle.players).length;
 
-            // ===========================
-            // TODO: Check BattleID in DB
-            // if( has(battle.id) in DB ) continue;
-            // ===========================
+            try {
+                const connection = await mysql.createConnection(dbConfig);
+                const checkQuery = 'SELECT * FROM battles WHERE battle_id = ?';
+                const [existingData] = await connection.execute(checkQuery, [battle.id]);
 
+                if (existingData.length > 0) {
+                    console.log('이미 해당 데이터가 존재합니다.');
+                } else {
+                    // 2v2, 5v5, 10v10
+                    if ((totalPlayers === 4 && totalKills >= 2) ||
+                        (totalPlayers === 10 && totalKills >= 5) ||
+                        (totalPlayers === 20 && totalKills >= 10)) {
+                        check_totalKills = totalKills;
+                        check_players_count = totalPlayers;
+                        check_battlelog = (check_players_count / 2) * 11;
 
-            // 2v2, 5v5, 10v10
-            if ((totalPlayers === 4 && totalKills >= 2) ||
-                (totalPlayers === 10 && totalKills >= 5) ||
-                (totalPlayers === 20 && totalKills >= 10)) {
-                check_totalKills = totalKills;
-                check_players_count = totalPlayers;
-                check_battlelog = (check_players_count / 2) * 11;
+                        // add data in Set
+                        print_log(`Add Battle ID : ${battle.id}`);
+                        battleIds.add(battle.id);
+                    }
+                }
 
-                // add data in Set
-                print_log(`Add Battle ID : ${battle.id}`);
-                battleIds.add(battle.id);
+                await connection.end();
+            } catch (error) {
+                console.error('에러 발생:', error);
             }
-        });
+        }
 
 
 
@@ -223,22 +275,55 @@ async function main() {
                 defeat_team = A_team;
             }
 
-            
+
 
             // SAVE DB
             const type = countPlayers === 20 ? 1010 : countPlayers === 10 ? 55 : 22;
             console.log(`====== TEST ======`);
             console.log(`${id}\t${totalFame}\t${totalKills}\t${countPlayers}\t${type}`);
             console.log(`== VICTORY TEAM ==`);
-            victory_team.forEach((name) => {
-                console.log(`${name}`);
-            });
 
+            const vteam = Array.from(victory_team).join(', ');
+            console.log(vteam);
+            // victory_team.forEach((name) => {
+            //     console.log(`${name}`);
+            // });
 
             console.log(`== DEFEAT TEAM ==`);
-            defeat_team.forEach((name) => {
-                console.log(`${name}`);
-            });
+            const dteam = Array.from(defeat_team).join(', ');
+            console.log(dteam);
+            // defeat_team.forEach((name) => {
+            //     console.log(`${name}`);
+            // });
+
+
+            try {
+                // 데이터베이스 연결
+                const connection = await mysql.createConnection(dbConfig);
+
+                // INSERT 쿼리 생성
+                const insertQuery = `INSERT INTO battles (battle_id, totalFame, totalKills, countPlayers, victory_team, defeat_team, type) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+                // 데이터
+                const data = [
+                    id, // battle_id
+                    totalFame, // totalFame
+                    totalKills, // totalKills
+                    countPlayers, // countPlayers
+                    vteam, // victory_team
+                    dteam, // defeat_team
+                    type // type
+                ];
+
+                // INSERT 실행
+                const [results] = await connection.execute(insertQuery, data);
+                console.log('데이터 삽입 완료:', results);
+
+                // 연결 종료
+                await connection.end();
+            } catch (error) {
+                console.error('에러 발생:', error);
+            }
         }
 
 
