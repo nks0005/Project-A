@@ -19,7 +19,7 @@ const { start } = require('repl');
  * DEFINE / ENV
  */
 const MAX_LIMIT = 50;
-const LOOP_COUNT_BATTLELOG = 199;
+let LOOP_COUNT_BATTLELOG = 199;
 
 const battleIds = new Set();
 
@@ -376,9 +376,13 @@ async function main() {
         }
 
 
+        // init 이후
+        LOOP_COUNT_BATTLELOG = 10;
+
     }
 }
 
 module.exports = {
-    main
+    main,
+    main2
 };
