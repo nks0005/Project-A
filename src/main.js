@@ -383,6 +383,5 @@ async function main() {
 }
 
 module.exports = {
-    main,
-    main2
+    main
 };
