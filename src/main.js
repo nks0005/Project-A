@@ -65,7 +65,7 @@ async function main() {
                 const [existingData] = await connection.execute(checkQuery, [battle.id]);
 
                 if (existingData.length > 0) {
-                    console.log('이미 해당 데이터가 존재합니다.');
+                    //console.log('이미 해당 데이터가 존재합니다.');
                 } else {
                     // 2v2, 5v5, 10v10
                     if ((totalPlayers === 4 && totalKills >= 2) ||
@@ -366,7 +366,7 @@ async function main() {
 
                 // INSERT 실행
                 const [results] = await connection.execute(insertQuery, data);
-                console.log(`데이터 삽입 완료:, ${results.insertId} battleId : ${id}`);
+                //console.log(`데이터 삽입 완료:, ${results.insertId} battleId : ${id}`);
 
                 // 연결 종료
                 await connection.end();
