@@ -15,18 +15,19 @@ const { start } = require('repl');
 
 
 
+
 /**
  * DEFINE / ENV
  */
 const MAX_LIMIT = 50;
-let LOOP_COUNT_BATTLELOG = 20;
+let LOOP_COUNT_BATTLELOG = 10;
 
 const battleIds = new Set();
 
 /**
  * main function
  */
-async function main() {
+async function main(cache_check) {
     // Crawler Battle Log
 
     // lc = loop_count
@@ -58,32 +59,37 @@ async function main() {
             const totalKills = battle.totalKills;
             const totalPlayers = Object.keys(battle.players).length;
 
+            //console.log(cache_check.size);
+            if (cache_check.has(battle.id)) {
+                //console.log('ssss 이미 해당 데이터가 존재합니다.');
+            }
+            else {
+                try {
+                    const connection = await mysql.createConnection(dbConfig);
+                    const checkQuery = 'SELECT * FROM battles WHERE battle_id = ?';
+                    const [existingData] = await connection.execute(checkQuery, [battle.id]);
 
-            try {
-                const connection = await mysql.createConnection(dbConfig);
-                const checkQuery = 'SELECT * FROM battles WHERE battle_id = ?';
-                const [existingData] = await connection.execute(checkQuery, [battle.id]);
+                    if (existingData.length > 0) {
+                        //console.log('이미 해당 데이터가 존재합니다.');
+                    } else {
+                        // 2v2, 5v5, 10v10
+                        if ((totalPlayers === 4 && totalKills >= 2) ||
+                            (totalPlayers === 10 && totalKills >= 5) ||
+                            (totalPlayers === 20 && totalKills >= 10)) {
+                            check_totalKills = totalKills;
+                            check_players_count = totalPlayers;
+                            check_battlelog = (check_players_count / 2) * 11;
 
-                if (existingData.length > 0) {
-                    //console.log('이미 해당 데이터가 존재합니다.');
-                } else {
-                    // 2v2, 5v5, 10v10
-                    if ((totalPlayers === 4 && totalKills >= 2) ||
-                        (totalPlayers === 10 && totalKills >= 5) ||
-                        (totalPlayers === 20 && totalKills >= 10)) {
-                        check_totalKills = totalKills;
-                        check_players_count = totalPlayers;
-                        check_battlelog = (check_players_count / 2) * 11;
-
-                        // add data in Set
-                        print_log(`Add Battle ID : ${battle.id}`);
-                        battleIds.add(battle.id);
+                            // add data in Set
+                            print_log(`Add Battle ID : ${battle.id}`);
+                            battleIds.add(battle.id);
+                        }
                     }
-                }
 
-                await connection.end();
-            } catch (error) {
-                console.error('에러 발생:', error);
+                    await connection.end();
+                } catch (error) {
+                    console.error('에러 발생:', error);
+                }
             }
         }
 
@@ -298,9 +304,9 @@ async function main() {
                 // GroupMembers
                 print_log(`groupmembers length : ${battle.GroupMembers.length}`);
                 for (let g = 0; g < battle.GroupMembers.length; g++) {
-                    
+
                     current = battle.GroupMembers[g];
-                    
+
                     if (current.Equipment.MainHand) {
                         if (current.Equipment.MainHand.Type) {
                             name_user = current.Name;
@@ -368,6 +374,7 @@ async function main() {
                 const [results] = await connection.execute(insertQuery, data);
                 //console.log(`데이터 삽입 완료:, ${results.insertId} battleId : ${id}`);
 
+                cache_check.add(id);
                 // 연결 종료
                 await connection.end();
             } catch (error) {

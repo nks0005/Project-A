@@ -1,7 +1,8 @@
 const { main } = require('./src/main.js');
 
 // 5분마다 main 함수 실행
-const interval = 5 * 60 * 1000; // 5분을 밀리초로 변환하여 설정
+const interval = 1000; // 5분을 밀리초로 변환하여 설정
+
 
 
 function sleep(ms) {
@@ -9,19 +10,20 @@ function sleep(ms) {
 }
 
 async function test() {
-
+    
     function getCurrentTime() {
         const now = new Date();
         return now.toTimeString().split(' ')[0]; // 시간 부분만 반환 (HH:MM:SS)
     }
 
-
+    const cache_check = new Set();
     while (true) {
+
         const currentTime = getCurrentTime().split(':').slice(0, 2).join(':'); // 시간과 분만 가져오기
         console.log(`Current time (hour:minute): ${currentTime}`);
         console.log('running...');
         console.log('running...');
-        await main();
+        await main(cache_check);
         console.log('sleep...');
         await sleep(interval);
     };

@@ -27,4 +27,4 @@ async function test() {
 
 // 처음에는 지연 없이 main 함수 실행
 console.log('Running main function initially...');
-test();
+test(); 
