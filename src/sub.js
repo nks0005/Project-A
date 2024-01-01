@@ -6,6 +6,8 @@ const { print_log } = require('./util/print');
 const mysql = require('mysql2/promise');
 const dbConfig = require('./config/db_config.js');
 
+
+
 function extractWeaponName(str) {
 
 
@@ -105,11 +107,18 @@ async function sub() {
 
                 const simpleWeaponId_2 = insertSimpleResult_2.insertId; // 삽입된 무기 ID
 
+                const weaponIds = [simpleWeaponId_1, simpleWeaponId_2];
+                weaponIds.sort((a, b) => a - b); // 오름차순으로 정렬, 내림차순으로 정렬하려면 b - a를 사용
 
+                const sortedSimpleWeaponId_1 = weaponIds[0];
+                const sortedSimpleWeaponId_2 = weaponIds[1];
+
+
+                
                 // Duo_Weapon_Comps에 데이터 삽입 
                 await connection.execute(
                     'INSERT INTO Duo_Weapon_Comps (simple_weapon_A, simple_weapon_B, win_count, lose_count) VALUES (?, ?, 1, 0) ON DUPLICATE KEY UPDATE win_count = win_count + 1',
-                    [simpleWeaponId_1, simpleWeaponId_2]
+                    [sortedSimpleWeaponId_1, sortedSimpleWeaponId_2]
                 );
             }
 
@@ -134,11 +143,16 @@ async function sub() {
 
                 const simpleWeaponId_2 = insertSimpleResult_2.insertId; // 삽입된 무기 ID
 
+                const weaponIds = [simpleWeaponId_1, simpleWeaponId_2];
+                weaponIds.sort((a, b) => a - b); // 오름차순으로 정렬, 내림차순으로 정렬하려면 b - a를 사용
+
+                const sortedSimpleWeaponId_1 = weaponIds[0];
+                const sortedSimpleWeaponId_2 = weaponIds[1];
 
                 // Duo_Weapon_Comps에 데이터 삽입 
                 await connection.execute(
                     'INSERT INTO Duo_Weapon_Comps (simple_weapon_A, simple_weapon_B, win_count, lose_count) VALUES (?, ?, 0, 1) ON DUPLICATE KEY UPDATE lose_count = lose_count + 1',
-                    [simpleWeaponId_1, simpleWeaponId_2]
+                    [sortedSimpleWeaponId_1, sortedSimpleWeaponId_2]
                 );
 
 
