@@ -40,3 +40,30 @@ CREATE TABLE Duo_Weapon_Comps (
     FOREIGN KEY (simple_weapon_A) REFERENCES Simple_Weapon(id),
     FOREIGN KEY (simple_weapon_B) REFERENCES Simple_Weapon(id)
 );
+
+
+CREATE VIEW test_view AS
+SELECT
+    a_sw.main_hand AS A_name,
+    b_sw.main_hand AS B_name,
+    dwc.win_count,
+    dwc.lose_count,
+     dwc.win_count + dwc.lose_count AS total_count
+    
+FROM
+    Duo_Weapon_Comps dwc
+JOIN
+    Simple_Weapon a_sw ON dwc.simple_weapon_A = a_sw.id
+JOIN
+    Simple_Weapon b_sw ON dwc.simple_weapon_B = b_sw.id;
+
+
+
+/*
+SELECT *
+FROM test_view
+ORDER BY total_count DESC
+LIMIT 10 OFFSET 0;
+
+select * from test_view ORDER BY total_count DESC limit 10 offset 0;
+*/
