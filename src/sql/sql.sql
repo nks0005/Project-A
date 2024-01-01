@@ -18,3 +18,25 @@ CREATE TABLE battles (
 CREATE INDEX idx_battle_id ON battles (battle_id);
 
 
+
+
+ALTER TABLE battles
+ADD COLUMN process TINYINT DEFAULT 0;
+
+
+
+CREATE TABLE Simple_Weapon (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    main_hand VARCHAR(255) UNIQUE KEY,
+    used_count INT DEFAULT 0
+);
+
+CREATE TABLE Duo_Weapon_Comps (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    simple_weapon_A INT UNIQUE KEY,
+    simple_weapon_B INT UNIQUE KEY,
+    win_count INT DEFAULT 0,
+    lose_count INT DEFAULT 0,
+    FOREIGN KEY (simple_weapon_A) REFERENCES Simple_Weapon(id),
+    FOREIGN KEY (simple_weapon_B) REFERENCES Simple_Weapon(id)
+);
